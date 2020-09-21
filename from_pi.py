@@ -10,14 +10,22 @@ def empty(a):
 def board_detec(img):
     flag = False
     coor_board = None
-    threshold1 = 50
-    threshold2 = 220
-    kernal_s = 1
+    # threshold1 = cv.getTrackbarPos("Threshold1","Parameters")
+    # threshold2 = cv.getTrackbarPos("Threshold2","Parameters")
+    # kernal_s = cv.getTrackbarPos("kernal","Parameters")
+    # blur = cv.getTrackbarPos("blur","Parameters")
+    # itdel = cv.getTrackbarPos("itdel","Parameters")
+    # itero = cv.getTrackbarPos("itero","Parameters")
+    # min_a = cv.getTrackbarPos("min_a","Size")
+    # max_a = cv.getTrackbarPos("max_a","Size")
+    threshold1 = 216
+    threshold2 = 111
+    kernal_s = 2
     blur = 1
-    itdel = 3
+    itdel = 1
     itero = 1
-    min_a = 51
-    max_a = 169
+    min_a = 43
+    max_a = 239
     kernal = np.ones((kernal_s,kernal_s), np.uint8)
     grey = cv.GaussianBlur(img, (blur*2+1,blur*2+1), 3)
     grey = cv.cvtColor(grey, cv.COLOR_BGR2GRAY)
@@ -29,7 +37,7 @@ def board_detec(img):
     cv.imshow('trash', thrash)
     _, contours, _ = cv.findContours(thrash, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     
-    cv.imshow('thrash', evosion)
+    # cv.imshow('thrash', evosion)
     for contour in contours:
         approx = cv.approxPolyDP(contour, 0.1*cv.arcLength(contour, True), True)
         # area = cv.contourArea(approx)
@@ -40,7 +48,7 @@ def board_detec(img):
         
         if len(approx) == 4:
             flag = True
-            x, y, w, h = cv.boundingRect(approx)
+            _, _, w, h = cv.boundingRect(approx)
             aspectRatio = float(w)/h
             im_size = img.shape[0]*img.shape[1]
             if aspectRatio > 0.5 and aspectRatio < 1.5:
@@ -50,10 +58,6 @@ def board_detec(img):
                     
 
     return coor_board, flag
-
-
-def board_pos(img):
-    None
 
 
 def correct_perspective(img, approx):                                                      
@@ -86,41 +90,75 @@ def get_square(img, row, col):
     return img[x1:x2,y1:y2]
 
 
+def detect_piece(img):
+    threshold1 = cv.getTrackbarPos("Threshold1","Parameters")
+    threshold2 = cv.getTrackbarPos("Threshold2","Parameters")
+    # kernal_s = cv.getTrackbarPos("kernal","Parameters")
+    blur = cv.getTrackbarPos("blur","Parameters")
+    # itdel = cv.getTrackbarPos("itdel","Parameters")
+    # itero = cv.getTrackbarPos("itero","Parameters")
+    # min_a = cv.getTrackbarPos("min_a","Size")
+    # max_a = cv.getTrackbarPos("max_a","Size")
+    grey = cv.GaussianBlur(img, (blur*2+1,blur*2+1), 3)
+    grey = cv.cvtColor(grey, cv.COLOR_BGR2GRAY)
+    imgCanny = cv.Canny(grey, threshold1, threshold2)
+    thrash_sq = cv.adaptiveThreshold(imgCanny, 255, cv.ADAPTIVE_THRESH_MEAN_C,
+                                   cv.THRESH_BINARY, 11, 2)
+    
+    return thrash_sq
+
+
 #cap = cv.VideoCapture(0)
 board = chess.Board()
-imboard = cv.imread('chess_top_1.jpg')
+imboard = cv.imread('top_3.png')
 
 cv.namedWindow("Parameters")
 cv.resizeWindow("Parameters",640,240)
 cv.namedWindow("Size")
 cv.resizeWindow("Size",640,240)
-cv.createTrackbar("Threshold1","Parameters",50,255,empty)
-cv.createTrackbar("Threshold2","Parameters",220,255,empty)
-cv.createTrackbar("kernal","Parameters",1,255,empty)
+cv.createTrackbar("Threshold1","Parameters",216,255,empty)
+cv.createTrackbar("Threshold2","Parameters",111,255,empty)
+cv.createTrackbar("kernal","Parameters",2,255,empty)
 cv.createTrackbar("blur","Parameters",1,100,empty)
 cv.createTrackbar("itdel","Parameters",1,5,empty)
 cv.createTrackbar("itero","Parameters",1,5, empty)
-cv.createTrackbar("min_a","Size",51,255, empty)
-cv.createTrackbar("max_a","Size",169,255, empty)
+cv.createTrackbar("min_a","Size",43,255, empty)
+cv.createTrackbar("max_a","Size",239,255, empty)
 
 #while(cap.isOpened()):
 while True:
-    frame = cv.imread('chess_top_1.jpg')
+    frame = cv.imread('top_3.png')
         #ret, frame = cap.read() 
-            
+
+    ## Работа со всей доской - вырез с перспектвой        
     coor_board, flag = board_detec(frame)
-    print(coor_board)
+    # print(coor_board)
     if not(coor_board is None):
         imboard = correct_perspective(frame, coor_board)
         
     if imboard.shape[0] > 100 and imboard.shape[1] > 100:
         imboard = imboard[15:imboard.shape[0] - 15,15:imboard.shape[1] - 15]
         # cv.imshow('thrash', thrash)
-        cv.imshow('board', imboard)
-        cv.imshow('img', frame)
-        print(imboard.shape)
+        # cv.imshow('board', imboard)
+        # cv.imshow('img', frame)
+        # print(imboard.shape)
+
+
+
+    ## Вырезаем клетку
     square = get_square(imboard, 0, 0)
-        #cv.imshow('square', square)
+    square_empty = get_square(imboard, 7, 3)
+
+    # cv.imshow('square1', square)
+    # cv.imshow('square2', square_empty)
+
+    ## Обрабатываем клетку  
+    thrash_sq_1 = detect_piece(square)
+    thrash_sq_2 = detect_piece(square_empty)
+
+    cv.imshow('thrash_sq1', thrash_sq_1)
+    cv.imshow('thrash_sq2', thrash_sq_2)
+
     if cv.waitKey(1) & 0xFF == ord('q'):
         break
 
