@@ -1,7 +1,8 @@
 import cv2 as cv
 import numpy as np 
 import chess
-
+import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
 
 def empty(a):
     pass
@@ -158,6 +159,23 @@ while True:
 
     cv.imshow('thrash_sq1', thrash_sq_1)
     cv.imshow('thrash_sq2', thrash_sq_2)
+
+    ## Настриваем отображение результата в plt
+
+    square = cv.cvtColor(square, cv.COLOR_BGR2RGB)
+    square_empty = cv.cvtColor(square_empty, cv.COLOR_BGR2RGB)
+    titles = ['square1', 'square2', 'thrash_sq1', 'thrash_sq2']
+    images = [square, square_empty, thrash_sq_1, thrash_sq_2]
+    for i in range(4):
+        plt.subplot(2,2,i+1), plt.imshow(images[i], 'gray')
+        plt.title(titles[i])
+        plt.xticks([]), plt.yticks([])
+        plt.pause(0.1)
+
+    
+
+
+
 
     if cv.waitKey(1) & 0xFF == ord('q'):
         break
