@@ -140,8 +140,8 @@ while True:
     if imboard.shape[0] > 100 and imboard.shape[1] > 100:
         imboard = imboard[15:imboard.shape[0] - 15,15:imboard.shape[1] - 15]
         # cv.imshow('thrash', thrash)
-        # cv.imshow('board', imboard)
-        # cv.imshow('img', frame)
+        cv.imshow('board', imboard)
+        cv.imshow('img', frame)
         # print(imboard.shape)
 
 
@@ -150,8 +150,8 @@ while True:
     square = get_square(imboard, 0, 0)
     square_empty = get_square(imboard, 7, 3)
 
-    # cv.imshow('square1', square)
-    # cv.imshow('square2', square_empty)
+    cv.imshow('square1', square)
+    cv.imshow('square2', square_empty)
 
     ## Обрабатываем клетку  
     thrash_sq_1 = detect_piece(square)
@@ -170,7 +170,7 @@ while True:
         plt.subplot(2,2,i+1), plt.imshow(images[i], 'gray')
         plt.title(titles[i])
         plt.xticks([]), plt.yticks([])
-        plt.pause(0.1)
+        # plt.pause(0.1)
 
     
 

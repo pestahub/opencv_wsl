@@ -10,21 +10,26 @@ img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
 
 fig = plt.figure()
-ax = fig.add_subplot(111)
-fig.subplots_adjust(left=0.25, bottom=0.25)
+ax = fig.add_subplot(1,2,1)
+bx = fig.add_subplot(2,2,1)
+cx = fig.add_subplot(3,2,1)
+dx = fig.add_subplot(4,2,1)
+fig.subplots_adjust(bottom=0.5)
 min0 = 0
 max0 = 25000
 
-im = max0 * 1
 im1 = ax.imshow(img)
+im2 = bx.imshow(img)
+im2 = cx.imshow(img)
+im2 = dx.imshow(img)
 fig.colorbar(im1)
 
-axcolor = 'lightgoldenrodyellow'
-axmin = fig.add_axes([0.25, 0.1, 0.65, 0.03])
-axmax  = fig.add_axes([0.25, 0.15, 0.65, 0.03])
 
-smin = Slider(axmin, 'Min', 0, 30000, valinit=min0)
-smax = Slider(axmax, 'Max', 0, 30000, valinit=max0)
+axmin = plt.axes([0.1,0.1,0.2,0.05])
+axmax  = plt.axes([0.5,0.1,0.2,0.05])
+
+smin = Slider(axmin, 'Min', 0, 30000)
+smax = Slider(axmax, 'Max', 0, 30000)
 
 def update(val):
     im1.set_clim([smin.val,smax.val])
