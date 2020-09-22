@@ -11,34 +11,26 @@ def empty(a):
 def board_detec(img):
     flag = False
     coor_board = None
-    # threshold1 = cv.getTrackbarPos("Threshold1","Parameters")
-    # threshold2 = cv.getTrackbarPos("Threshold2","Parameters")
-    # kernal_s = cv.getTrackbarPos("kernal","Parameters")
-    # blur = cv.getTrackbarPos("blur","Parameters")
-    # itdel = cv.getTrackbarPos("itdel","Parameters")
-    # itero = cv.getTrackbarPos("itero","Parameters")
-    # min_a = cv.getTrackbarPos("min_a","Size")
-    # max_a = cv.getTrackbarPos("max_a","Size")
-    threshold1 = 216
-    threshold2 = 111
-    kernal_s = 2
-    blur = 1
-    itdel = 1
-    itero = 1
-    min_a = 43
-    max_a = 239
+    threshold1 = thr1S.val
+    threshold2 = thr2S.val
+    kernal_s = kern.val
+    blur = blrS.val
+    itdela = itdel.val
+    iteroa = itero.val
+    min_aa = min_a.val
+    max_aa = max_a.val
     kernal = np.ones((kernal_s,kernal_s), np.uint8)
     grey = cv.GaussianBlur(img, (blur*2+1,blur*2+1), 3)
     grey = cv.cvtColor(grey, cv.COLOR_BGR2GRAY)
     imgCanny = cv.Canny(grey, threshold1, threshold2)
-    imgdel = cv.dilate(imgCanny, kernal, iterations=itdel)
-    evosion = cv.erode(imgdel, kernal, iterations=itero)
+    imgdel = cv.dilate(imgCanny, kernal, iterations=itdela)
+    evosion = cv.erode(imgdel, kernal, iterations=iteroa)
     thrash = cv.adaptiveThreshold(evosion, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C,
                                    cv.THRESH_BINARY, 11, 2)
     
     _, contours, _ = cv.findContours(thrash, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     
-    
+    ax[8].imshow(thrash)
     for contour in contours:
         approx = cv.approxPolyDP(contour, 0.1*cv.arcLength(contour, True), True)
         # area = cv.contourArea(approx)
@@ -53,7 +45,7 @@ def board_detec(img):
             aspectRatio = float(w)/h
             im_size = img.shape[0]*img.shape[1]
             if aspectRatio > 0.5 and aspectRatio < 1.5:
-                if (w*h > int(min_a*im_size/614)) and (w*h < (max_a*im_size/409)):
+                if (w*h > int(min_aa*im_size/614)) and (w*h < (max_aa*im_size/255)):
                     cv.drawContours(img, [approx], 0, (255, 0, 0), 5)
                     coor_board = approx
                     
@@ -109,42 +101,48 @@ def detect_piece(img):
 def update(val):
     
     frame = cv.imread('top_3.png')
-    ## Работа со всей доской - вырез с перспектвой        
+    frameM = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+    ## Работа со всей доской - вырез с перспектвой  
+    ax[9].imshow(frameM)      
     coor_board, _ = board_detec(frame)
-   
+    
     if not(coor_board is None):
         imboard = correct_perspective(frame, coor_board)
         
-    if imboard.shape[0] > 100 and imboard.shape[1] > 100:
-        imboard = imboard[15:imboard.shape[0] - 15,15:imboard.shape[1] - 15]
+        if imboard.shape[0] > 100 and imboard.shape[1] > 100:
+            imboard = imboard[15:imboard.shape[0] - 15,15:imboard.shape[1] - 15]
 
-    ## Вырезаем клетку
-    square_00 = get_square(imboard, 0, 0)
-    square_75 = get_square(imboard, 7, 5)
-    square_43 = get_square(imboard, 4, 3)
-    ## Обрабатываем клетку  
-    thrash_sq_1 = detect_piece(square_00)
-    thrash_sq_2 = detect_piece(square_75)
-    thrash_sq_3 = detect_piece(square_43)
+        ## Вырезаем клетку
+        square_00 = get_square(imboard, 0, 0)
+        square_75 = get_square(imboard, 7, 5)
+        square_43 = get_square(imboard, 4, 3)
+        ## Обрабатываем клетку  
+        thrash_sq_1 = detect_piece(square_00)
+        thrash_sq_2 = detect_piece(square_75)
+        thrash_sq_3 = detect_piece(square_43)
 
-    ## Настриваем отображение результата в plt
+        ## Настриваем отображение результата в plt
 
-    square_00 = cv.cvtColor(square_00, cv.COLOR_BGR2RGB)
-    square_75 = cv.cvtColor(square_75, cv.COLOR_BGR2RGB)
-    square_43 = cv.cvtColor(square_43, cv.COLOR_BGR2RGB)
-    
-    
-    images = [square_00, square_75, square_43, thrash_sq_1, thrash_sq_2,
-             thrash_sq_3, imboard, frame]
-    for i in range(n_imgs):
-        ax[i].imshow(images[i])
+        # square_00 = cv.cvtColor(square_00, cv.COLOR_BGR2RGB)
+        # square_75 = cv.cvtColor(square_75, cv.COLOR_BGR2RGB)
+        # square_43 = cv.cvtColor(square_43, cv.COLOR_BGR2RGB)
+        
+        
+        images = [square_00, square_75, square_43, imboard, frame]
+        ims = [thrash_sq_1, thrash_sq_2, thrash_sq_3]
+        for i in range(3):
+            ax[i].imshow(cv.cvtColor(images[i], cv.COLOR_BGR2RGB))
+        for i in range(3):
+            ax[i+3].imshow(ims[i])
+        for i in range(2):
+            ax[i+6].imshow(images[i+3])
         
 
 
 ## input img
-frame = cv.imread('top_3.png')
+# frame = cv.imread('top_4.jpg')
 ## number of output imgs
-n_imgs = 8
+n_imgs = 10
 
 ## Set up matplotlib
 fig = plt.figure()
@@ -152,7 +150,8 @@ fig.subplots_adjust(bottom=0.25)
 ax = []
 titles = ['square1', 'square2',  'square3', 'thrash_sq1', 
          'thrash_sq2', 'thrash_sq3',
-            'imboard', 'frame']
+            'imboard', 'frame', 'thrash', 'board']
+
 for i in range(n_imgs):
     ax.append(fig.add_subplot(2,n_imgs//2,i+1))
     plt.title(titles[i])
@@ -165,8 +164,8 @@ thr1ax = plt.axes([0.07,0.17,0.1,0.03])
 thr2ax  = plt.axes([0.07,0.1,0.1,0.03])
 blrax  = plt.axes([0.07,0.03,0.1,0.03])
 
-thr1 = Slider(thr1ax, 'Threshold1', 0, 255, valstep=1, valinit=160)
-thr2 = Slider(thr2ax, 'Threshold2', 0, 255, valstep=1, valinit=111)
+thr1 = Slider(thr1ax, 'Threshold1', 0, 255, valstep=1, valinit=120)
+thr2 = Slider(thr2ax, 'Threshold2', 0, 255, valstep=1, valinit=34)
 blr = Slider(blrax, 'Blur', 0, 40, valstep=1, valinit=0)
 
 thr1.on_changed(update)
@@ -185,12 +184,12 @@ max_abx = plt.axes([0.85,0.05,0.1,0.03])
 
 thr1S = Slider(thr1bx, 'Threshold1', 0, 255, valstep=1, valinit=216)
 thr2S = Slider(thr2bx, 'Threshold2', 0, 255, valstep=1, valinit=111)
-kern = Slider(kernbx, 'Blur', 0, 40, valstep=1, valinit=2)
-blrS = Slider(blrbx, 'Threshold1', 0, 40, valstep=1, valinit=1)
+kern = Slider(kernbx, 'kernal', 0, 40, valstep=1, valinit=2)
+blrS = Slider(blrbx, 'blur', 0, 40, valstep=1, valinit=1)
 itdel = Slider(itdelbx, 'itdel', 0, 2, valstep=1, valinit=1)
 itero = Slider(iterobx, 'itero', 0, 2, valstep=1, valinit=1)
-min_a = Slider(min_abx, 'min_a', 0, 255, valstep=1, valinit=43)
-max_a = Slider(max_abx, 'max_a', 0, 255, valstep=1, valinit=239)
+min_a = Slider(min_abx, 'min_a', 0, 255, valstep=1, valinit=150)
+max_a = Slider(max_abx, 'max_a', 0, 255, valstep=1, valinit=255)
 
 thr1S.on_changed(update)
 thr2S.on_changed(update)
